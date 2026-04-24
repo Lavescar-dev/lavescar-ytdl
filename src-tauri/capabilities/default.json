@@ -1,0 +1,24 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "default capability set",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "shell:default",
+    "dialog:default",
+    "clipboard-manager:default",
+    "clipboard-manager:allow-read-text",
+    "updater:default",
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        {
+          "name": "binaries/yt-dlp",
+          "sidecar": true,
+          "args": true
+        }
+      ]
+    }
+  ]
+}
