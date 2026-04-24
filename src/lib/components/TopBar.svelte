@@ -7,7 +7,7 @@
     <span class="name">lavescar</span>
     <span class="sep">▸</span>
     <span class="mode">yt-dlp</span>
-    <span class="ver">v0.1.0-alpha</span>
+    <span class="ver">v1.0.0</span>
   </div>
   <div class="spacer"></div>
   <div class="top-actions">

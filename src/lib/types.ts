@@ -68,6 +68,8 @@ export interface DownloadRequest {
   outputDir: string;
   flags?: string[];
   subtitleOpts?: SubtitleOpts | null;
+  title?: string;
+  codec?: string;
 }
 
 export interface RuntimeInfo {

@@ -52,6 +52,13 @@ pub struct DownloadRequest {
     pub flags: Vec<String>,
     #[serde(default)]
     pub subtitle_opts: Option<SubtitleOpts>,
+    /// Optional display title from the frontend (already fetched via
+    /// `extract_info`). Saves the DB a placeholder like `(url) …` row.
+    #[serde(default)]
+    pub title: Option<String>,
+    /// Optional codec/format label from the UI (e.g. `av1+opus`).
+    #[serde(default)]
+    pub codec: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

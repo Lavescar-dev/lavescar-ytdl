@@ -15,7 +15,10 @@
   function countFor(id: string): number | null {
     if (id === 'download') return downloads.active;
     if (id === 'queue')    return downloads.queued;
-    if (id === 'history')  return 147;       // mock
+    if (id === 'history')
+      return downloads.items.filter(
+        (d) => d.status === 'done' || d.status === 'error' || d.status === 'cancelled'
+      ).length;
     if (id === 'presets')  return presets.items.length;
     return null;
   }
