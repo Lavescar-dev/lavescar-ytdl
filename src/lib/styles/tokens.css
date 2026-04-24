@@ -1,0 +1,28 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=IBM+Plex+Serif:ital,wght@1,400&display=swap');
+
+:root {
+  /* surfaces */
+  --bg:        #0c0d0e;
+  --bg-soft:   #131517;
+  --surface:   #181a1d;
+  --surface-2: #1f2227;
+  --line:      #292d33;
+  --line-soft: #1d2025;
+
+  /* text */
+  --dim:       #5a6068;
+  --text:      #c2c6cd;
+  --text-hi:   #e8ebf0;
+
+  /* accents */
+  --amber:      #d4a017;
+  --amber-soft: #7a5e0d;
+  --rust:       #c25a3a;
+  --olive:      #8a9a4f;
+  --rose:       #b85460;
+  --cyan:       #6b9fa8;
+
+  /* type */
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --serif: 'IBM Plex Serif', Georgia, serif;
+}
