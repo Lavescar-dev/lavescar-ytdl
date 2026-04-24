@@ -101,10 +101,6 @@
     </div>
   {/if}
 
-  <div class="side-foot">
-    "tooling katmanını sahiplen,<br />
-    çözülmüş problemi yeniden çözme."
-  </div>
 </aside>
 
 <style>
@@ -183,14 +179,4 @@
   .dep-row .ok   { color: var(--olive); }
   .dep-row .warn { color: var(--rose); }
   .dep-name { color: var(--dim); }
-
-  .side-foot {
-    margin-top: auto;
-    padding: 14px 18px;
-    border-top: 1px solid var(--line);
-    font-size: 10px;
-    color: var(--dim);
-    font-family: var(--serif);
-    font-style: italic;
-  }
 </style>

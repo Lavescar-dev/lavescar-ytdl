@@ -12,7 +12,8 @@
       name: 'new preset',
       spec: 'bv+ba/b',
       flags: [],
-      hotkey: ''
+      hotkey: '',
+      category: 'video'
     };
   }
 
@@ -69,6 +70,7 @@
         <div class="info">
           <div class="name">
             {p.name}
+            <span class="badge cat cat-{p.category}">{p.category}</span>
             {#if p.isDefault}<span class="badge">default</span>{/if}
             {#if p.hotkey}<span class="badge hk">{p.hotkey}</span>{/if}
           </div>
@@ -95,6 +97,13 @@
         <div class="field">
           <label for="p-name">name</label>
           <input id="p-name" bind:value={editing.name} />
+        </div>
+        <div class="field">
+          <label for="p-cat">category</label>
+          <select id="p-cat" bind:value={editing.category}>
+            <option value="video">video</option>
+            <option value="audio">audio</option>
+          </select>
         </div>
         <div class="field">
           <label for="p-spec">format spec (yt-dlp <code>-f</code>)</label>
@@ -189,6 +198,8 @@
     color: var(--dim);
   }
   .badge.hk { color: var(--amber); border-color: var(--amber-soft); }
+  .badge.cat-video { color: var(--olive); border-color: var(--olive); }
+  .badge.cat-audio { color: var(--amber); border-color: var(--amber-soft); }
 
   .actions { display: flex; gap: 8px; }
   .edit, .del {
