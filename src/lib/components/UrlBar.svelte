@@ -4,6 +4,9 @@
   import { downloads } from '$lib/state/downloads.svelte';
   import { runtime } from '$lib/state/runtime.svelte';
   import { ui } from '$lib/state/ui.svelte';
+  import { i18n } from '$lib/i18n/index.svelte';
+
+  const t = $derived(i18n.t);
 
   let url = $state('');
   let queueing = $state(false);
@@ -52,11 +55,11 @@
 <div class="panel">
   <div class="urlbar">
     <div class="urlbar-label">
-      <span>source url</span>
+      <span>{t.urlbar.sourceUrl}</span>
       {#if ui.clipboardListening}
         <span class="clip">
           <span class="pulse"></span>
-          clipboard listener active
+          {t.urlbar.clipboardActive}
         </span>
       {/if}
     </div>
@@ -65,17 +68,17 @@
       <span class="url-prompt">$</span>
       <input
         bind:value={url}
-        placeholder="https://… or paste from clipboard"
+        placeholder={t.urlbar.placeholder}
         autocomplete="off"
         onkeydown={onKey}
       />
       <button class="url-go" onclick={trigger} disabled={metadata.isLoading}>
-        <span>{metadata.isLoading ? 'fetching…' : 'fetch'}</span>
+        <span>{metadata.isLoading ? t.urlbar.fetching : t.urlbar.fetch}</span>
         <span class="key">↵</span>
       </button>
       {#if metadata.state === 'ready'}
         <button class="url-queue" onclick={queue} disabled={queueing}>
-          <span>{queueing ? 'queueing…' : '▸ queue'}</span>
+          <span>{queueing ? t.urlbar.queueing : t.urlbar.queue}</span>
         </button>
       {/if}
     </div>

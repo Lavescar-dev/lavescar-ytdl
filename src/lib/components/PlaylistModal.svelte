@@ -3,6 +3,9 @@
   import { presets } from '$lib/state/presets.svelte';
   import { downloads } from '$lib/state/downloads.svelte';
   import { runtime } from '$lib/state/runtime.svelte';
+  import { i18n } from '$lib/i18n/index.svelte';
+
+  const t = $derived(i18n.t);
 
   const pl = $derived(metadata.playlist);
 
@@ -97,23 +100,23 @@
         <div>
           <h2>{pl.title}</h2>
           {#if pl.uploader}
-            <div class="sub">by {pl.uploader}</div>
+            <div class="sub">{t.playlist.by} {pl.uploader}</div>
           {/if}
         </div>
-        <button class="x" onclick={close} aria-label="Close">×</button>
+        <button class="x" onclick={close} aria-label={t.playlist.close}>×</button>
       </div>
 
       <div class="controls">
-        <span class="count">{selected.size} / {pl.entries.length} selected</span>
+        <span class="count">{t.playlist.selectedOf(selected.size, pl.entries.length)}</span>
         <div class="spacer"></div>
-        <button onclick={selectAll}>all</button>
-        <button onclick={selectNone}>none</button>
+        <button onclick={selectAll}>{t.playlist.all}</button>
+        <button onclick={selectNone}>{t.playlist.none}</button>
         <input
           bind:value={rangeInput}
-          placeholder="range e.g. 1-10, 15, 20-25"
+          placeholder={t.playlist.rangePlaceholder}
           class="range"
         />
-        <button onclick={applyRange}>apply</button>
+        <button onclick={applyRange}>{t.playlist.apply}</button>
       </div>
 
       <ul class="list">
@@ -138,14 +141,14 @@
       {#if queueError}<div class="err">{queueError}</div>{/if}
 
       <div class="foot">
-        <span class="dim">preset: {presets.selected?.name ?? '—'}</span>
-        <button onclick={close}>cancel</button>
+        <span class="dim">{t.playlist.preset}: {presets.selected?.name ?? '—'}</span>
+        <button onclick={close}>{t.playlist.cancel}</button>
         <button
           class="primary"
           onclick={queueSelected}
           disabled={queueing || selected.size === 0}
         >
-          {queueing ? 'queueing…' : `▸ queue ${selected.size}`}
+          {queueing ? t.playlist.queueing : t.playlist.queueN(selected.size)}
         </button>
       </div>
     </div>

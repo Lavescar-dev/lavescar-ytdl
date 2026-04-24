@@ -1,5 +1,8 @@
 <script lang="ts">
   import { cheatsheetVisible, listShortcuts } from '$lib/state/shortcuts.svelte';
+  import { i18n } from '$lib/i18n/index.svelte';
+
+  const t = $derived(i18n.t);
 
   function close() { cheatsheetVisible.value = false; }
 
@@ -29,16 +32,16 @@
       aria-labelledby="sc-title"
       tabindex="-1"
     >
-      <h3 id="sc-title">keyboard shortcuts</h3>
+      <h3 id="sc-title">{t.shortcuts.title}</h3>
       <ul>
         {#each listShortcuts() as s}
           <li>
             <span class="key">{fmt(s.combo)}</span>
-            <span class="lbl">{s.label}</span>
+            <span class="lbl">{s.labelKey(t)}</span>
           </li>
         {/each}
       </ul>
-      <div class="foot">press <span class="key">?</span> anytime · <span class="key">ESC</span> to close</div>
+      <div class="foot">{t.shortcuts.pressAnytime} <span class="key">?</span> · <span class="key">ESC</span> {t.shortcuts.toClose}</div>
     </div>
   </div>
 {/if}

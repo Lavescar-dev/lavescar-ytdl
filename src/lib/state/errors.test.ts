@@ -6,20 +6,12 @@ describe('errors store', () => {
     errors.clear();
   });
 
-  it('pushes a toast with kind-specific copy', () => {
+  it('pushes a toast and stores the kind discriminator', () => {
     errors.push('geo_blocked', 'country fence');
     expect(errors.items).toHaveLength(1);
     const e = errors.items[0];
     expect(e.kind).toBe('geo_blocked');
-    expect(e.title).toMatch(/geo-blocked/i);
-    expect(e.suggestion).toMatch(/VPN|cookie/i);
-  });
-
-  it('falls back to unknown copy for unexpected kind', () => {
-    // @ts-expect-error intentionally bad kind to exercise fallback
-    errors.push('nonsense', 'x');
-    const e = errors.items[0];
-    expect(e.title).toMatch(/yt-dlp|error/i);
+    expect(e.message).toBe('country fence');
   });
 
   it('dismiss removes by id', () => {
@@ -32,5 +24,12 @@ describe('errors store', () => {
   it('stores downloadId when provided', () => {
     errors.push('auth_required', 'sign in', 'dl-42');
     expect(errors.items[0].downloadId).toBe('dl-42');
+  });
+
+  it('clear empties the queue', () => {
+    errors.push('not_found', 'gone');
+    errors.push('shell', 'exec');
+    errors.clear();
+    expect(errors.items).toHaveLength(0);
   });
 });

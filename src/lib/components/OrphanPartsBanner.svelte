@@ -45,19 +45,19 @@
     dismissed = true;
     scan = null;
   }
+
+  import { i18n } from '$lib/i18n/index.svelte';
+  const t = $derived(i18n.t);
 </script>
 
 {#if scan && scan.items.length > 0}
   <div class="banner" role="status">
-    <div class="msg">
-      <strong>{scan.items.length} leftover .part file{scan.items.length === 1 ? '' : 's'}</strong>
-      <span class="dim"> · {fmtMb(totalSize)} in {scan.dir}</span>
-    </div>
+    <div class="msg">{t.orphans.summary(scan.items.length, fmtMb(totalSize), scan.dir)}</div>
     <div class="actions">
       <button onclick={cleanAll} disabled={deleting}>
-        {deleting ? 'cleaning…' : 'delete all'}
+        {deleting ? t.orphans.cleaning : t.orphans.deleteAll}
       </button>
-      <button class="secondary" onclick={dismiss}>dismiss</button>
+      <button class="secondary" onclick={dismiss}>{t.orphans.dismiss}</button>
     </div>
   </div>
 {/if}
@@ -73,9 +73,7 @@
     font-size: 12px;
     color: var(--text);
   }
-  .msg { flex: 1; }
-  .dim { color: var(--dim); }
-  strong { color: var(--amber); font-weight: 500; }
+  .msg { flex: 1; color: var(--text); }
   .actions { display: flex; gap: 8px; }
   .actions button {
     padding: 4px 12px;

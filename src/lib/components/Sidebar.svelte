@@ -3,14 +3,17 @@
   import { runtime } from '$lib/state/runtime.svelte';
   import { downloads } from '$lib/state/downloads.svelte';
   import { presets } from '$lib/state/presets.svelte';
+  import { i18n } from '$lib/i18n/index.svelte';
 
-  const navItems = [
-    { id: 'download' as const, label: 'download', icon: '▸' },
-    { id: 'queue'    as const, label: 'queue',    icon: '▣' },
-    { id: 'history'  as const, label: 'history',  icon: '≡' },
-    { id: 'presets'  as const, label: 'presets',  icon: '◈' },
-    { id: 'cookies'  as const, label: 'cookies',  icon: '⌘' }
-  ];
+  const t = $derived(i18n.t);
+
+  const navItems = $derived([
+    { id: 'download' as const, label: t.sidebar.download, icon: '▸' },
+    { id: 'queue'    as const, label: t.sidebar.queue,    icon: '▣' },
+    { id: 'history'  as const, label: t.sidebar.history,  icon: '≡' },
+    { id: 'presets'  as const, label: t.sidebar.presets,  icon: '◈' },
+    { id: 'cookies'  as const, label: t.sidebar.cookies,  icon: '⌘' }
+  ]);
 
   function countFor(id: string): number | null {
     if (id === 'download') return downloads.active;
@@ -27,7 +30,7 @@
 <aside class="side">
   <nav class="nav" aria-label="Main workspace">
     <div role="tablist" class="tabs">
-    <div class="nav-section-label">workspace</div>
+    <div class="nav-section-label">{t.sidebar.workspace}</div>
     {#each navItems as item, i}
       {@const count = countFor(item.id)}
       <div
@@ -65,37 +68,37 @@
 
   {#if runtime.info}
     <div class="side-block">
-      <div class="blk-label">runtime</div>
+      <div class="blk-label">{t.sidebar.runtime}</div>
       <div class="dep-row">
-        <span class="dep-name">yt-dlp</span>
+        <span class="dep-name">{t.sidebar.deps.ytdlp}</span>
         <span class="ok">✓ {runtime.info.ytDlpVersion}</span>
       </div>
       <div class="dep-row">
-        <span class="dep-name">ffmpeg</span>
+        <span class="dep-name">{t.sidebar.deps.ffmpeg}</span>
         <span class="ok">✓ {runtime.info.ffmpegVersion}</span>
       </div>
       <div class="dep-row">
-        <span class="dep-name">aria2c</span>
+        <span class="dep-name">{t.sidebar.deps.aria2c}</span>
         <span class="ok">✓ {runtime.info.aria2cVersion}</span>
       </div>
       <div class="dep-row">
-        <span class="dep-name">cookies</span>
+        <span class="dep-name">{t.sidebar.deps.cookies}</span>
         {#if runtime.info.cookiesSource}
           <span class="warn">! {runtime.info.cookiesSource}</span>
         {:else}
-          <span class="warn">! none</span>
+          <span class="warn">! {t.settings.cookieNone}</span>
         {/if}
       </div>
     </div>
 
     <div class="side-block">
-      <div class="blk-label">disk</div>
+      <div class="blk-label">{t.sidebar.disk}</div>
       <div class="dep-row">
-        <span class="dep-name">target</span>
+        <span class="dep-name">{t.sidebar.target}</span>
         <span style="color: var(--text)">{runtime.info.outputDir}</span>
       </div>
       <div class="dep-row">
-        <span class="dep-name">free</span>
+        <span class="dep-name">{t.sidebar.free}</span>
         <span style="color: var(--text)">{runtime.info.diskFreeGb.toFixed(1)} GB</span>
       </div>
     </div>

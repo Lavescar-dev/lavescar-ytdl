@@ -1,31 +1,30 @@
 <script lang="ts">
   import { runtime } from '$lib/state/runtime.svelte';
+  import { i18n } from '$lib/i18n/index.svelte';
 
-  const sources = [
-    { id: 'firefox',  label: 'Firefox' },
-    { id: 'chromium', label: 'Chromium' },
-    { id: 'brave',    label: 'Brave' },
-    { id: 'custom',   label: 'Custom path…' }
-  ];
+  const t = $derived(i18n.t);
+
+  const sources = $derived([
+    { id: 'firefox',  label: t.cookies.sourceFirefox },
+    { id: 'chromium', label: t.cookies.sourceChromium },
+    { id: 'brave',    label: t.cookies.sourceBrave },
+    { id: 'custom',   label: t.cookies.sourceCustom }
+  ]);
 
   let selected = $state<string>(runtime.info?.cookiesSource ?? 'firefox');
   let customPath = $state('');
 
-  // Faz 6'da import_cookies command çağrısı + test fetch yapılacak.
   function test() {
-    alert('cookie test — Faz 6 scope');
+    alert(t.cookies.test);
   }
 </script>
 
 <div class="view">
   <div class="head">
-    <h2>cookies</h2>
+    <h2>{t.cookies.title}</h2>
   </div>
 
-  <p class="intro">
-    yt-dlp private veya age-gated içerik için tarayıcı cookie'lerine ihtiyaç duyar.
-    Cookie kaynağını seçin; <code>--cookies-from-browser</code> otomatik kullanılır.
-  </p>
+  <p class="intro">{t.cookies.intro}</p>
 
   <div class="sources">
     {#each sources as s}
@@ -38,18 +37,15 @@
 
   {#if selected === 'custom'}
     <div class="custom">
-      <input bind:value={customPath} placeholder="/path/to/cookies.txt" />
+      <input bind:value={customPath} placeholder={t.cookies.customPath} />
     </div>
   {/if}
 
   <div class="actions">
-    <button onclick={test}>test · fetch private video</button>
+    <button onclick={test}>{t.cookies.test}</button>
   </div>
 
-  <div class="hint">
-    <strong>ileri özellikler (Faz 6):</strong> Firefox <code>cookies.sqlite</code> ve
-    Chromium <code>Cookies</code> (DPAPI / Keychain / libsecret decrypt) otomatik içe aktarma.
-  </div>
+  <div class="hint">{t.cookies.futureNote}</div>
 </div>
 
 <style>
@@ -125,9 +121,5 @@
     font-size: 11px;
     line-height: 1.6;
     max-width: 640px;
-  }
-  .hint code {
-    color: var(--amber);
-    font-size: 10.5px;
   }
 </style>

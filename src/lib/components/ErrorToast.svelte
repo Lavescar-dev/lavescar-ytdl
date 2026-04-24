@@ -1,23 +1,27 @@
 <script lang="ts">
   import { errors } from '$lib/state/errors.svelte';
   import { ui } from '$lib/state/ui.svelte';
+  import { i18n } from '$lib/i18n/index.svelte';
+
+  const t = $derived(i18n.t);
 </script>
 
 <div class="stack" role="region" aria-label="Notifications">
   {#each errors.items as e (e.id)}
+    {@const copy = t.error.kinds[e.kind]}
     <div class="toast kind-{e.kind}" role="alert">
       <div class="body">
         <div class="row">
           <span class="tag">{e.kind.replace('_', ' ')}</span>
-          <strong>{e.title}</strong>
-          <button class="x" onclick={() => errors.dismiss(e.id)} aria-label="Dismiss">×</button>
+          <strong>{copy.title}</strong>
+          <button class="x" onclick={() => errors.dismiss(e.id)} aria-label={t.error.dismiss}>×</button>
         </div>
         <div class="msg">{e.message}</div>
-        <div class="sug">{e.suggestion}</div>
+        <div class="sug">{copy.suggestion}</div>
         {#if e.kind === 'auth_required'}
           <div class="actions">
             <button onclick={() => { ui.setView('cookies'); errors.dismiss(e.id); }}>
-              → open cookies view
+              {t.error.openCookies}
             </button>
           </div>
         {/if}
@@ -46,19 +50,16 @@
     font-size: 12px;
     color: var(--text);
   }
-  .toast.kind-geo_blocked  { border-left-color: var(--rose); }
-  .toast.kind-auth_required{ border-left-color: var(--amber); }
-  .toast.kind-not_found    { border-left-color: var(--rose); }
-  .toast.kind-network      { border-left-color: var(--amber); }
-  .toast.kind-io           { border-left-color: var(--rose); }
-  .toast.kind-parse        { border-left-color: var(--amber); }
-  .toast.kind-shell        { border-left-color: var(--rose); }
+  .toast.kind-geo_blocked   { border-left-color: var(--rose); }
+  .toast.kind-auth_required { border-left-color: var(--amber); }
+  .toast.kind-not_found     { border-left-color: var(--rose); }
+  .toast.kind-network       { border-left-color: var(--amber); }
+  .toast.kind-io            { border-left-color: var(--rose); }
+  .toast.kind-parse         { border-left-color: var(--amber); }
+  .toast.kind-shell         { border-left-color: var(--rose); }
+  .toast.kind-fetch_failed  { border-left-color: var(--amber); }
 
-  .row {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-  }
+  .row { display: flex; align-items: baseline; gap: 8px; }
   .tag {
     font-size: 9.5px;
     color: var(--dim);
@@ -67,10 +68,7 @@
     border: 1px solid var(--line);
     padding: 1px 5px;
   }
-  strong {
-    color: var(--text-hi);
-    font-weight: 500;
-  }
+  strong { color: var(--text-hi); font-weight: 500; }
   .x {
     margin-left: auto;
     background: transparent;
@@ -80,20 +78,9 @@
     cursor: pointer;
     line-height: 1;
   }
-  .msg {
-    margin-top: 4px;
-    color: var(--text);
-    word-break: break-word;
-  }
-  .sug {
-    margin-top: 5px;
-    color: var(--dim);
-    font-size: 11px;
-    line-height: 1.45;
-  }
-  .actions {
-    margin-top: 8px;
-  }
+  .msg { margin-top: 4px; color: var(--text); word-break: break-word; }
+  .sug { margin-top: 5px; color: var(--dim); font-size: 11px; line-height: 1.45; }
+  .actions { margin-top: 8px; }
   .actions button {
     font-size: 10.5px;
     padding: 3px 9px;
@@ -101,7 +88,5 @@
     border: 1px solid var(--amber-soft);
     color: var(--amber);
   }
-  .actions button:hover {
-    background: var(--surface-2);
-  }
+  .actions button:hover { background: var(--surface-2); }
 </style>
