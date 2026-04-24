@@ -2,21 +2,23 @@
   import { downloads } from '$lib/state/downloads.svelte';
   import { presets } from '$lib/state/presets.svelte';
   import { runtime } from '$lib/state/runtime.svelte';
+  import { i18n } from '$lib/i18n/index.svelte';
 
+  const t = $derived(i18n.t);
   const speedMb = $derived((downloads.totalSpeed / 1_048_576).toFixed(1));
 </script>
 
 <footer class="statusbar">
   <div class="seg">
     <span class="pulse-dot"></span>
-    <span class="live">ready</span>
+    <span class="live">{t.status.ready}</span>
   </div>
   <div class="seg">
-    <span class="lbl">active</span>
+    <span class="lbl">{t.status.active}</span>
     <span class="val">{downloads.active}</span>
   </div>
   <div class="seg">
-    <span class="lbl">queued</span>
+    <span class="lbl">{t.status.queued}</span>
     <span class="val">{downloads.queued}</span>
   </div>
   <div class="seg">
@@ -24,20 +26,19 @@
     <span class="val">{speedMb} MB/s</span>
   </div>
   <div class="seg">
-    <span class="lbl">preset</span>
-    <span class="val">{presets.selected.name}</span>
+    <span class="lbl">{t.status.preset}</span>
+    <span class="val">{presets.selected?.name ?? '—'}</span>
   </div>
 
   <div class="spacer"></div>
 
   {#if runtime.info}
     <div class="seg">
-      <span class="lbl">target</span>
+      <span class="lbl">{t.status.target}</span>
       <span class="path">{runtime.info.outputDir}</span>
     </div>
   {/if}
   <div class="seg">
-    <span class="val">l</span>
     <span class="blink"></span>
   </div>
 </footer>

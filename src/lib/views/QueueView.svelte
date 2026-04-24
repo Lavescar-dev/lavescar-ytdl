@@ -1,5 +1,8 @@
 <script lang="ts">
   import { downloads } from '$lib/state/downloads.svelte';
+  import { i18n } from '$lib/i18n/index.svelte';
+
+  const t = $derived(i18n.t);
 
   const items = $derived(
     downloads.items.filter((d) => d.status === 'queued' || d.status === 'active')
@@ -8,26 +11,30 @@
   function cancel(id: string) {
     downloads.cancel(id);
   }
+
+  function statusLabel(s: string): string {
+    if (s === 'queued') return t.download.queued;
+    if (s === 'active') return t.download.active;
+    return s;
+  }
 </script>
 
 <div class="view">
   <div class="head">
-    <h2>queue</h2>
-    <span class="dim">{items.length} item{items.length === 1 ? '' : 's'}</span>
+    <h2>{t.queueView.title}</h2>
+    <span class="dim">{t.queueView.items(items.length)}</span>
   </div>
 
   {#if items.length === 0}
-    <div class="empty">
-      queue is empty — paste a URL in the download view.
-    </div>
+    <div class="empty">{t.queueView.empty}</div>
   {:else}
     <ul class="list">
       {#each items as d (d.id)}
         <li class="row">
-          <span class="st st-{d.status}">{d.status}</span>
+          <span class="st st-{d.status}">{statusLabel(d.status)}</span>
           <span class="ttl">{d.title}</span>
           <span class="dim codec">{d.codec}</span>
-          <button class="cancel" onclick={() => cancel(d.id)}>cancel</button>
+          <button class="cancel" onclick={() => cancel(d.id)}>{t.queueView.cancel}</button>
         </li>
       {/each}
     </ul>

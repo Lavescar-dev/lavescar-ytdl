@@ -1,6 +1,9 @@
 <script lang="ts">
   import { metadata } from '$lib/state/metadata.svelte';
   import type { SubtitleOpts } from '$lib/types';
+  import { i18n } from '$lib/i18n/index.svelte';
+
+  const t = $derived(i18n.t);
 
   // Grouped language list for the current video. Manual entries take precedence
   // if the same code shows up in both buckets.
@@ -66,27 +69,25 @@
   <div class="scrim" onclick={() => metadata.closeSubtitleModal()} role="button" tabindex="-1" onkeydown={() => {}}>
     <div class="card" onclick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" tabindex="-1" onkeydown={() => {}}>
       <div class="head">
-        <h2>subtitles</h2>
-        <button class="x" onclick={() => metadata.closeSubtitleModal()} aria-label="Close">×</button>
+        <h2>{t.subtitle.title}</h2>
+        <button class="x" onclick={() => metadata.closeSubtitleModal()} aria-label={t.subtitle.close}>×</button>
       </div>
 
       <div class="mode">
         <label>
           <input type="radio" bind:group={autoMode} value={false} />
-          manual captions (author-provided)
+          {t.subtitle.manualMode}
         </label>
         <label>
           <input type="radio" bind:group={autoMode} value={true} />
-          auto-generated captions
+          {t.subtitle.autoMode}
         </label>
       </div>
 
       {#if langs.length === 0}
-        <div class="empty">no subtitles available for this video.</div>
+        <div class="empty">{t.subtitle.notAvailable}</div>
       {:else}
-        <div class="hint">
-          {selected.size} of {langs.length} language{langs.length === 1 ? '' : 's'} selected
-        </div>
+        <div class="hint">{t.subtitle.selectedOf(selected.size, langs.length)}</div>
         <ul class="langs">
           {#each langs as l (l.code)}
             <li>
@@ -99,8 +100,8 @@
                 />
                 <span class="code">{l.code}</span>
                 <span class="tags">
-                  {#if l.manual}<span class="tag manual">manual</span>{/if}
-                  {#if l.auto}<span class="tag auto">auto</span>{/if}
+                  {#if l.manual}<span class="tag manual">{t.subtitle.badgeManual}</span>{/if}
+                  {#if l.auto}<span class="tag auto">{t.subtitle.badgeAuto}</span>{/if}
                 </span>
               </label>
             </li>
@@ -111,15 +112,15 @@
       <div class="embed">
         <label>
           <input type="checkbox" bind:checked={embed} />
-          embed into video file (otherwise saved alongside as .vtt)
+          {t.subtitle.embedFile}
         </label>
       </div>
 
       <div class="foot">
-        <button class="danger" onclick={clear}>no subtitles</button>
+        <button class="danger" onclick={clear}>{t.subtitle.none}</button>
         <div class="spacer"></div>
-        <button onclick={() => metadata.closeSubtitleModal()}>cancel</button>
-        <button class="primary" onclick={apply}>apply</button>
+        <button onclick={() => metadata.closeSubtitleModal()}>{t.subtitle.cancel}</button>
+        <button class="primary" onclick={apply}>{t.subtitle.apply}</button>
       </div>
     </div>
   </div>

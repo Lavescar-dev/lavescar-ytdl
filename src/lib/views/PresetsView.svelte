@@ -1,6 +1,9 @@
 <script lang="ts">
   import type { Preset } from '$lib/types';
   import { presets } from '$lib/state/presets.svelte';
+  import { i18n } from '$lib/i18n/index.svelte';
+
+  const t = $derived(i18n.t);
 
   let editing = $state<Preset | null>(null);
   let saving = $state(false);
@@ -45,7 +48,7 @@
   }
 
   async function remove(id: string) {
-    if (!confirm('delete this preset?')) return;
+    if (!confirm(t.presetsView.deleteConfirm)) return;
     await presets.remove(id);
   }
 
@@ -60,8 +63,8 @@
 
 <div class="view">
   <div class="head">
-    <h2>presets</h2>
-    <button class="new" onclick={startNew}>+ new preset</button>
+    <h2>{t.presetsView.title}</h2>
+    <button class="new" onclick={startNew}>{t.presetsView.newPreset}</button>
   </div>
 
   <ul class="list">
@@ -71,7 +74,7 @@
           <div class="name">
             {p.name}
             <span class="badge cat cat-{p.category}">{p.category}</span>
-            {#if p.isDefault}<span class="badge">default</span>{/if}
+            {#if p.isDefault}<span class="badge">{t.preset.default}</span>{/if}
             {#if p.hotkey}<span class="badge hk">{p.hotkey}</span>{/if}
           </div>
           <div class="spec">{p.spec}</div>
@@ -80,8 +83,8 @@
           {/if}
         </div>
         <div class="actions">
-          <button class="edit" onclick={() => startEdit(p)}>edit</button>
-          <button class="del" onclick={() => remove(p.id)}>delete</button>
+          <button class="edit" onclick={() => startEdit(p)}>{t.presetsView.edit}</button>
+          <button class="del" onclick={() => remove(p.id)}>{t.presetsView.delete}</button>
         </div>
       </li>
     {/each}
@@ -91,48 +94,48 @@
     <div class="modal">
       <div class="modal-inner">
         <div class="modal-head">
-          <h3>{presets.items.some((x) => x.id === editing!.id) ? 'edit' : 'new'} preset</h3>
+          <h3>{presets.items.some((x) => x.id === editing!.id) ? t.presetsView.editTitle : t.presetsView.newTitle}</h3>
           <button class="x" onclick={cancel}>×</button>
         </div>
         <div class="field">
-          <label for="p-name">name</label>
+          <label for="p-name">{t.presetsView.name}</label>
           <input id="p-name" bind:value={editing.name} />
         </div>
         <div class="field">
-          <label for="p-cat">category</label>
+          <label for="p-cat">{t.presetsView.category}</label>
           <select id="p-cat" bind:value={editing.category}>
-            <option value="video">video</option>
-            <option value="audio">audio</option>
+            <option value="video">{t.preset.video}</option>
+            <option value="audio">{t.preset.audio}</option>
           </select>
         </div>
         <div class="field">
-          <label for="p-spec">format spec (yt-dlp <code>-f</code>)</label>
+          <label for="p-spec">{t.presetsView.formatSpec}</label>
           <textarea id="p-spec" rows="2" bind:value={editing.spec}></textarea>
         </div>
         <div class="field">
-          <label for="p-flags">extra flags (space-separated)</label>
+          <label for="p-flags">{t.presetsView.flagsLabel}</label>
           <input
             id="p-flags"
             value={(editing.flags ?? []).join(' ')}
             oninput={(e) => updateFlags((e.target as HTMLInputElement).value)}
-            placeholder="--embed-metadata --sponsorblock-remove sponsor"
+            placeholder={t.presetsView.flagsPlaceholder}
           />
         </div>
         <div class="field">
-          <label for="p-hk">hotkey</label>
-          <input id="p-hk" bind:value={editing.hotkey} placeholder="⌘1 · optional" />
+          <label for="p-hk">{t.presetsView.hotkey}</label>
+          <input id="p-hk" bind:value={editing.hotkey} placeholder={t.presetsView.hotkeyPlaceholder} />
         </div>
         <div class="field inline">
           <label>
             <input type="checkbox" bind:checked={editing.isDefault} />
-            default preset
+            {t.presetsView.defaultPreset}
           </label>
         </div>
         {#if saveError}<div class="err">{saveError}</div>{/if}
         <div class="modal-foot">
-          <button onclick={cancel}>cancel</button>
+          <button onclick={cancel}>{t.presetsView.cancel}</button>
           <button class="primary" onclick={save} disabled={saving}>
-            {saving ? 'saving…' : 'save'}
+            {saving ? t.presetsView.saving : t.presetsView.save}
           </button>
         </div>
       </div>

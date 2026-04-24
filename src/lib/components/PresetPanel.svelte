@@ -1,16 +1,19 @@
 <script lang="ts">
   import { presets } from '$lib/state/presets.svelte';
   import { ui } from '$lib/state/ui.svelte';
+  import { i18n } from '$lib/i18n/index.svelte';
+
+  const t = $derived(i18n.t);
 </script>
 
 <div class="panel">
   <div class="panel-h">
     <span class="dot"></span>
-    <span class="title-text">preset</span>
-    <span class="meta">⌘1-3 within tab</span>
+    <span class="title-text">{t.preset.title}</span>
+    <span class="meta">{t.preset.hint}</span>
   </div>
 
-  <div class="tabs" role="tablist" aria-label="Preset category">
+  <div class="tabs" role="tablist" aria-label={t.preset.title}>
     <button
       class="tab"
       class:on={presets.activeCategory === 'video'}
@@ -18,7 +21,7 @@
       aria-selected={presets.activeCategory === 'video'}
       onclick={() => presets.setCategory('video')}
     >
-      video
+      {t.preset.video}
     </button>
     <button
       class="tab"
@@ -27,7 +30,7 @@
       aria-selected={presets.activeCategory === 'audio'}
       onclick={() => presets.setCategory('audio')}
     >
-      audio
+      {t.preset.audio}
     </button>
   </div>
 
@@ -51,17 +54,17 @@
           {/if}
         </div>
         <span class="preset-meta">
-          {p.isDefault ? 'default' : (p.hotkey ?? '')}
+          {p.isDefault ? t.preset.default : (p.hotkey ?? '')}
         </span>
       </div>
     {/each}
 
     {#if presets.visible.length === 0}
-      <div class="empty">no presets in this category yet.</div>
+      <div class="empty">{t.preset.empty}</div>
     {/if}
 
     <button class="preset-add" onclick={() => ui.setView('presets')}>
-      + manage presets
+      {t.preset.manage}
     </button>
   </div>
 </div>

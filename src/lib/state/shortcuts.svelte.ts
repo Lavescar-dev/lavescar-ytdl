@@ -1,12 +1,23 @@
 import { ui } from './ui.svelte';
 import { presets } from './presets.svelte';
+import { i18n } from '$lib/i18n/index.svelte';
+import type { Dict } from '$lib/i18n/dict';
 
-type Action = { combo: string; label: string; run: () => void };
+/**
+ * Shortcut entry. `labelKey` is a function over the active dictionary so the
+ * cheatsheet always renders in the user's chosen language without us having
+ * to re-register every shortcut on switch.
+ */
+export interface Action {
+  combo: string;
+  labelKey: (t: Dict) => string;
+  run: () => void;
+}
 
 const actions: Action[] = [];
 
-export function registerShortcut(combo: string, label: string, run: () => void) {
-  actions.push({ combo, label, run });
+export function registerShortcut(combo: string, labelKey: (t: Dict) => string, run: () => void) {
+  actions.push({ combo, labelKey, run });
 }
 
 export function listShortcuts(): readonly Action[] {
@@ -28,27 +39,25 @@ export function startShortcuts() {
   if (started || typeof window === 'undefined') return;
   started = true;
 
-  registerShortcut('mod+l', 'focus URL input', () => {
+  registerShortcut('mod+l', (t) => t.shortcuts.focusUrl, () => {
     const el = document.querySelector<HTMLInputElement>('input[placeholder^="https"]');
     el?.focus();
     el?.select();
   });
 
-  registerShortcut('mod+1', 'active category preset #1', () => selectCategoryPreset(0));
-  registerShortcut('mod+2', 'active category preset #2', () => selectCategoryPreset(1));
-  registerShortcut('mod+3', 'active category preset #3', () => selectCategoryPreset(2));
-  registerShortcut('mod+shift+v', 'switch to video preset tab', () => presets.setCategory('video'));
-  registerShortcut('mod+shift+a', 'switch to audio preset tab', () => presets.setCategory('audio'));
-
-  registerShortcut('mod+,', 'open settings', () => ui.openSettings());
-  registerShortcut('?', 'show shortcuts cheatsheet', () => toggleCheatsheet(true));
-  registerShortcut('escape', 'close overlay', () => toggleCheatsheet(false));
+  registerShortcut('mod+1', (t) => t.shortcuts.presetIndex(1), () => selectCategoryPreset(0));
+  registerShortcut('mod+2', (t) => t.shortcuts.presetIndex(2), () => selectCategoryPreset(1));
+  registerShortcut('mod+3', (t) => t.shortcuts.presetIndex(3), () => selectCategoryPreset(2));
+  registerShortcut('mod+shift+v', (t) => t.shortcuts.switchVideo, () => presets.setCategory('video'));
+  registerShortcut('mod+shift+a', (t) => t.shortcuts.switchAudio, () => presets.setCategory('audio'));
+  registerShortcut('mod+,', (t) => t.shortcuts.openSettings, () => ui.openSettings());
+  registerShortcut('?', (t) => t.shortcuts.showCheatsheet, () => toggleCheatsheet(true));
+  registerShortcut('escape', (t) => t.shortcuts.closeOverlay, () => toggleCheatsheet(false));
 
   window.addEventListener('keydown', (e) => {
     const tag = (e.target as HTMLElement | null)?.tagName;
     const isEditable =
       tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement | null)?.isContentEditable;
-    // Allow mod+L (focus URL) even from editable — otherwise skip editable targets.
     const combo = normalize(e);
     if (isEditable && combo !== 'mod+l' && combo !== 'escape') return;
 
@@ -64,8 +73,6 @@ export function startShortcuts() {
 
 function selectCategoryPreset(index: number) {
   const list = presets.items.filter((p) => p.category === presets.activeCategory);
-  // Prefer rows carrying an explicit `⌘N` hotkey (user-chosen order), else fall
-  // back to list position — works both for legacy DBs and freshly seeded ones.
   const wanted = `⌘${index + 1}`;
   const byHotkey = list.find((p) => p.hotkey === wanted);
   const target = byHotkey ?? list[index];
@@ -80,3 +87,6 @@ class CheatsheetStore {
   value = $state(false);
 }
 export const cheatsheetVisible = new CheatsheetStore();
+
+// Re-export to keep `i18n` import live in the module graph.
+export const _i18n = i18n;

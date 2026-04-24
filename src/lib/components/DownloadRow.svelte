@@ -2,6 +2,9 @@
   import type { Download } from '$lib/types';
   import { downloads } from '$lib/state/downloads.svelte';
   import { openInMpv, revealInFileManager } from '$lib/api/tauri';
+  import { i18n } from '$lib/i18n/index.svelte';
+
+  const t = $derived(i18n.t);
 
   interface Props { download: Download; index: number; }
   let { download: d, index }: Props = $props();
@@ -16,10 +19,11 @@
   const fmtSpeed = (bps: number): string => `${(bps / 1_048_576).toFixed(1)} MB/s`;
 
   const fmtEta = (s: number): string => {
-    if (s < 60) return `eta 0:${String(Math.round(s)).padStart(2, '0')}`;
+    const label = t.download.eta;
+    if (s < 60) return `${label} 0:${String(Math.round(s)).padStart(2, '0')}`;
     const m = Math.floor(s / 60);
     const sec = Math.round(s % 60);
-    return `eta ${m}:${String(sec).padStart(2, '0')}`;
+    return `${label} ${m}:${String(sec).padStart(2, '0')}`;
   };
 
   const pct = $derived(
@@ -43,13 +47,13 @@
       <span class="codec">{d.codec}</span>
 
       {#if d.status === 'queued'}
-        <span>queued</span>
+        <span>{t.download.queued}</span>
         <span class="pct">—</span>
       {:else if d.status === 'done'}
         <span>{fmtBytes(d.totalBytes)}</span>
-        <span class="pct">done</span>
+        <span class="pct">{t.download.done}</span>
         {#if d.outputPath}
-          <button class="link" onclick={() => openInMpv(d.outputPath!)}>▸ open in mpv</button>
+          <button class="link" onclick={() => openInMpv(d.outputPath!)}>{t.download.openInMpv}</button>
         {/if}
       {:else}
         <span>{fmtBytes(d.downloadedBytes)} / {fmtBytes(d.totalBytes)}</span>
@@ -64,15 +68,15 @@
     {#if d.status === 'done'}
       <button
         class="dl-act"
-        title="Show in folder"
+        title={t.download.showInFolder}
         onclick={() => d.outputPath && revealInFileManager(d.outputPath)}
       >⊡</button>
     {:else if d.status === 'queued'}
-      <button class="dl-act" title="Move up">↑</button>
-      <button class="dl-act danger" title="Remove" onclick={() => downloads.cancel(d.id)}>✕</button>
+      <button class="dl-act" title={t.download.moveUp}>↑</button>
+      <button class="dl-act danger" title={t.download.removeBtn} onclick={() => downloads.cancel(d.id)}>✕</button>
     {:else}
-      <button class="dl-act" title="Pause">⏸</button>
-      <button class="dl-act danger" title="Cancel" onclick={() => downloads.cancel(d.id)}>✕</button>
+      <button class="dl-act" title={t.download.pause}>⏸</button>
+      <button class="dl-act danger" title={t.download.cancel} onclick={() => downloads.cancel(d.id)}>✕</button>
     {/if}
   </div>
 </div>

@@ -32,6 +32,9 @@
   function dismiss() {
     pending = null;
   }
+
+  import { i18n } from '$lib/i18n/index.svelte';
+  const t = $derived(i18n.t);
 </script>
 
 {#if pending}
@@ -39,8 +42,8 @@
     <span class="src">{pending.source}</span>
     <span class="url" title={pending.url}>{truncate(pending.url)}</span>
     <div class="actions">
-      <button class="primary" onclick={accept}>fetch</button>
-      <button onclick={dismiss}>dismiss</button>
+      <button class="primary" onclick={accept}>{t.clipboard.fetch}</button>
+      <button onclick={dismiss}>{t.clipboard.dismiss}</button>
     </div>
   </div>
 {/if}

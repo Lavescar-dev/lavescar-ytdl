@@ -1,7 +1,10 @@
 <script lang="ts">
   import { downloads } from '$lib/state/downloads.svelte';
   import { ui } from '$lib/state/ui.svelte';
+  import { i18n } from '$lib/i18n/index.svelte';
   import DownloadRow from './DownloadRow.svelte';
+
+  const t = $derived(i18n.t);
 
   // ACTIVE panel only shows in-flight work; completed/errored items live in History.
   const sortedItems = $derived.by(() => {
@@ -16,9 +19,9 @@
 <div class="panel">
   <div class="panel-h">
     <span class="dot"></span>
-    <span class="title-text">active</span>
+    <span class="title-text">{t.download.active}</span>
     <span class="meta">
-      {downloads.active} running · concurrent: {ui.concurrentLimit} · throttle: {ui.throttleEnabled ? 'on' : 'off'}
+      {downloads.active} {t.download.running} · {t.download.concurrent}: {ui.concurrentLimit} · {t.download.throttle}: {ui.throttleEnabled ? t.download.throttleOn : t.download.throttleOff}
     </span>
   </div>
 

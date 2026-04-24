@@ -13,6 +13,9 @@
     type YtdlpUpdateProgress
   } from '$lib/api/tauri';
   import { onMount } from 'svelte';
+  import { i18n } from '$lib/i18n/index.svelte';
+
+  const t = $derived(i18n.t);
 
   let outputDir = $state(runtime.info?.outputDir ?? '~/dl/yt');
   let cookiesSource = $state(runtime.info?.cookiesSource ?? 'firefox');
@@ -105,20 +108,36 @@
   <div class="scrim" onclick={() => ui.closeSettings()} role="button" tabindex="-1" onkeydown={() => {}}>
     <div class="card" onclick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" tabindex="-1" onkeydown={() => {}}>
       <div class="head">
-        <h2>settings</h2>
-        <span class="hint">⌘S save · ESC close</span>
+        <h2>{t.settings.title}</h2>
+        <span class="hint">{t.settings.saveHint}</span>
       </div>
 
       <div class="field">
-        <label for="s-out">output directory</label>
-        <div class="row">
-          <input id="s-out" bind:value={outputDir} />
-          <button onclick={browse}>browse…</button>
+        <label for="s-lang">{t.settings.language}</label>
+        <div class="lang-row" role="group" aria-label={t.settings.language}>
+          <button
+            class="lang-pick"
+            class:on={i18n.locale === 'en'}
+            onclick={() => i18n.set('en')}
+          >{t.settings.languageEn}</button>
+          <button
+            class="lang-pick"
+            class:on={i18n.locale === 'tr'}
+            onclick={() => i18n.set('tr')}
+          >{t.settings.languageTr}</button>
         </div>
       </div>
 
       <div class="field">
-        <label for="s-cl">concurrent downloads · {ui.concurrentLimit}</label>
+        <label for="s-out">{t.settings.outputDir}</label>
+        <div class="row">
+          <input id="s-out" bind:value={outputDir} />
+          <button onclick={browse}>{t.settings.browse}</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="s-cl">{t.settings.concurrent} · {ui.concurrentLimit}</label>
         <input
           id="s-cl"
           type="range"
@@ -127,13 +146,13 @@
           step="1"
           bind:value={ui.concurrentLimit}
         />
-        <div class="sub-hint">applies immediately to queued downloads</div>
+        <div class="sub-hint">{t.settings.concurrentHint}</div>
       </div>
 
       <div class="field">
         <label>
           <input type="checkbox" bind:checked={ui.throttleEnabled} />
-          throttle download speed
+          {t.settings.throttle}
         </label>
         {#if ui.throttleEnabled}
           <div class="sub">
@@ -147,11 +166,11 @@
             />
           </div>
         {/if}
-        <div class="sub-hint">applies to new downloads · active tasks keep their original rate</div>
+        <div class="sub-hint">{t.settings.throttleApplyHint}</div>
       </div>
 
       <div class="field">
-        <label for="s-pr">default preset</label>
+        <label for="s-pr">{t.settings.defaultPreset}</label>
         <select id="s-pr" bind:value={defaultPresetId}>
           {#each presets.items as p (p.id)}
             <option value={p.id}>{p.name}</option>
@@ -160,19 +179,19 @@
       </div>
 
       <div class="field">
-        <label for="s-ck">cookie source</label>
+        <label for="s-ck">{t.settings.cookieSource}</label>
         <select id="s-ck" bind:value={cookiesSource}>
           <option value="firefox">Firefox</option>
           <option value="chromium">Chromium</option>
           <option value="brave">Brave</option>
-          <option value="none">none</option>
+          <option value="none">{t.settings.cookieNone}</option>
         </select>
       </div>
 
       <div class="field">
         <label>
           <input type="checkbox" bind:checked={ui.clipboardListening} />
-          watch clipboard for URLs
+          {t.settings.watchClipboard}
         </label>
       </div>
 
@@ -185,15 +204,15 @@
       <div class="ytdlp-update">
         <div class="row">
           <button onclick={doUpdateYtdlp} disabled={ytdlpUpdating}>
-            {ytdlpUpdating ? 'updating…' : '▸ update yt-dlp'}
+            {ytdlpUpdating ? t.settings.updateYtdlpUpdating : t.settings.updateYtdlp}
           </button>
           {#if ytdlpUpdated}
-            <span class="ok-note">updated to {ytdlpUpdated}</span>
+            <span class="ok-note">{t.settings.updateYtdlpUpdatedTo} {ytdlpUpdated}</span>
           {/if}
         </div>
         {#if ytdlpUpdating && ytdlpProgress}
           <div class="upd-status">
-            {ytdlpProgress.phase}
+            {t.settings.updatePhase[ytdlpProgress.phase]}
             {#if ytdlpProgress.phase === 'downloading'}
               · {fmtBytes(ytdlpProgress.bytes)}{ytdlpProgress.total ? ` / ${fmtBytes(ytdlpProgress.total)}` : ''}
             {/if}
@@ -215,9 +234,9 @@
       {#if saveError}<div class="err">{saveError}</div>{/if}
 
       <div class="foot">
-        <button onclick={() => ui.closeSettings()}>cancel</button>
+        <button onclick={() => ui.closeSettings()}>{t.settings.cancel}</button>
         <button class="primary" onclick={save} disabled={saving}>
-          {saving ? 'saving…' : 'save'}
+          {saving ? t.settings.saving : t.settings.save}
         </button>
       </div>
     </div>
@@ -301,6 +320,26 @@
     color: var(--dim);
     margin-top: 4px;
   }
+
+  .lang-row {
+    display: flex;
+    gap: 6px;
+  }
+  .lang-pick {
+    padding: 5px 12px;
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--dim);
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .lang-pick.on {
+    background: var(--amber);
+    color: var(--bg);
+    border-color: var(--amber);
+  }
+  .lang-pick:not(.on):hover { color: var(--text-hi); }
 
   .ytdlp-update {
     margin-top: 12px;

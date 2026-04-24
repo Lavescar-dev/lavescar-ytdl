@@ -1,7 +1,17 @@
 <script lang="ts">
   import { downloads } from '$lib/state/downloads.svelte';
+  import { i18n } from '$lib/i18n/index.svelte';
+
+  const t = $derived(i18n.t);
 
   let search = $state('');
+
+  function statusLabel(s: string): string {
+    if (s === 'done') return t.history.statusDone;
+    if (s === 'error') return t.history.statusError;
+    if (s === 'cancelled') return t.history.statusCancelled;
+    return s;
+  }
 
   const completed = $derived(
     downloads.items
@@ -47,16 +57,16 @@
 
 <div class="view">
   <div class="head">
-    <h2>history</h2>
+    <h2>{t.history.title}</h2>
     <input
       bind:value={search}
-      placeholder="search title, url, codec…"
+      placeholder={t.history.searchPlaceholder}
       class="search"
     />
   </div>
 
   {#if completed.length === 0}
-    <div class="empty">no completed downloads yet.</div>
+    <div class="empty">{t.history.empty}</div>
   {:else}
     {#each grouped as [day, rows]}
       <div class="day">
@@ -64,11 +74,11 @@
         <ul class="list">
           {#each rows as d (d.id)}
             <li class="row">
-              <span class="st st-{d.status}">{d.status}</span>
+              <span class="st st-{d.status}">{statusLabel(d.status)}</span>
               <span class="ttl" title={d.url}>{d.title}</span>
               <span class="dim codec">{d.codec}</span>
               {#if d.outputPath}
-                <button class="copy" onclick={() => reveal(d.outputPath!)}>copy path</button>
+                <button class="copy" onclick={() => reveal(d.outputPath!)}>{t.history.copyPath}</button>
               {/if}
               {#if d.error}
                 <span class="err" title={d.error}>!</span>

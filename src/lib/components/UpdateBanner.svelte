@@ -68,35 +68,39 @@
   function fmtMb(b: number): string {
     return `${(b / 1_048_576).toFixed(1)} MB`;
   }
+
+  // i18n
+  import { i18n } from '$lib/i18n/index.svelte';
+  const t = $derived(i18n.t);
 </script>
 
 {#if state.phase !== 'idle' && state.phase !== 'dismissed'}
   <div class="banner" role="status">
     {#if state.phase === 'available'}
       <div class="msg">
-        <strong>Update available · v{state.version}</strong>
+        <strong>{t.update.available(`v${state.version}`)}</strong>
         {#if state.body}<span class="dim"> · {state.body.slice(0, 80)}</span>{/if}
       </div>
       <div class="actions">
-        <button class="primary" onclick={install}>install & relaunch</button>
-        <button class="secondary" onclick={dismiss}>later</button>
+        <button class="primary" onclick={install}>{t.update.install}</button>
+        <button class="secondary" onclick={dismiss}>{t.update.later}</button>
       </div>
     {:else if state.phase === 'downloading'}
       <div class="msg">
-        <strong>Downloading update…</strong>
+        <strong>{t.update.downloading}</strong>
         <span class="dim"> · {fmtMb(state.received)}{state.total ? ` / ${fmtMb(state.total)}` : ''}</span>
       </div>
     {:else if state.phase === 'ready'}
       <div class="msg">
-        <strong>Update installed.</strong>
-        <span class="dim"> restarting…</span>
+        <strong>{t.update.installed}</strong>
+        <span class="dim"> {t.update.restarting}</span>
       </div>
     {:else if state.phase === 'error'}
       <div class="msg err">
-        <strong>Update failed:</strong> {state.message}
+        <strong>{t.update.failed}</strong> {state.message}
       </div>
       <div class="actions">
-        <button class="secondary" onclick={dismiss}>dismiss</button>
+        <button class="secondary" onclick={dismiss}>{t.update.dismiss}</button>
       </div>
     {/if}
   </div>

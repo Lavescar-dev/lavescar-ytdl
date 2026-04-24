@@ -1,16 +1,19 @@
 <script lang="ts">
   import { metadata } from '$lib/state/metadata.svelte';
+  import { i18n } from '$lib/i18n/index.svelte';
+
+  const t = $derived(i18n.t);
 </script>
 
 <div class="panel">
   <div class="panel-h">
     <span class="dot"></span>
-    <span class="title-text">metadata</span>
+    <span class="title-text">{t.metadata.title}</span>
     <span class="meta">
-      {#if metadata.state === 'empty'}awaiting input
-      {:else if metadata.state === 'loading'}fetching…
-      {:else if metadata.state === 'ready' && metadata.current}ready · {metadata.current.duration}
-      {:else if metadata.state === 'error'}error
+      {#if metadata.state === 'empty'}{t.metadata.awaitingInput}
+      {:else if metadata.state === 'loading'}{t.metadata.fetching}
+      {:else if metadata.state === 'ready' && metadata.current}{t.metadata.ready} · {metadata.current.duration}
+      {:else if metadata.state === 'error'}{t.metadata.error}
       {/if}
     </span>
   </div>
@@ -19,9 +22,9 @@
     {#if metadata.state === 'empty' || metadata.state === 'loading'}
       <div class="meta-empty">
         {#if metadata.state === 'loading'}
-          fetching from yt-dlp…
+          {t.metadata.fetchingFrom}
         {:else}
-          paste a url above to inspect formats
+          {t.metadata.pasteHint}
         {/if}
         <span class="glyph">◯ ─ ─ ─ ─ ─ ─ ─ ─ ─ ◯</span>
       </div>
@@ -35,12 +38,12 @@
         <div class="meta-title">{m.title}</div>
         <div class="meta-channel">{m.uploader}</div>
         <div class="meta-grid">
-          <span class="k">duration</span><span class="v">{m.duration}</span>
-          <span class="k">best-v</span><span class="v"><span class="hi">{m.bestVideo}</span></span>
-          <span class="k">best-a</span><span class="v"><span class="hi">{m.bestAudio}</span></span>
-          <span class="k">size-est</span><span class="v">{m.sizeEstimate}</span>
-          <span class="k">subs</span><span class="v">{m.subtitles}</span>
-          <span class="k">chapters</span><span class="v">{m.chapters}</span>
+          <span class="k">{t.metadata.duration}</span><span class="v">{m.duration}</span>
+          <span class="k">{t.metadata.bestV}</span><span class="v"><span class="hi">{m.bestVideo}</span></span>
+          <span class="k">{t.metadata.bestA}</span><span class="v"><span class="hi">{m.bestAudio}</span></span>
+          <span class="k">{t.metadata.sizeEst}</span><span class="v">{m.sizeEstimate}</span>
+          <span class="k">{t.metadata.subs}</span><span class="v">{m.subtitles}</span>
+          <span class="k">{t.metadata.chapters}</span><span class="v">{m.chapters}</span>
         </div>
 
         <div class="format-pick">
@@ -57,16 +60,16 @@
 
         <div class="sub-config">
           <button class="sub-btn" onclick={() => metadata.openSubtitleModal()}>
-            configure subtitles…
+            {t.metadata.configureSubtitles}
           </button>
           {#if metadata.subtitleOpts}
             <span class="sub-summary">
               {metadata.subtitleOpts.langs.join(', ')}
-              · {metadata.subtitleOpts.auto ? 'auto' : 'manual'}
+              · {metadata.subtitleOpts.auto ? t.subtitle.badgeAuto : t.subtitle.badgeManual}
               · {metadata.subtitleOpts.embed ? 'embed' : 'separate'}
             </span>
           {:else}
-            <span class="sub-summary dim">no subtitles selected</span>
+            <span class="sub-summary dim">{t.metadata.noSubtitlesSelected}</span>
           {/if}
         </div>
       </div>
