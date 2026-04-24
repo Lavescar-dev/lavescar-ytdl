@@ -80,13 +80,20 @@ impl DownloadManager {
 
         let id = uuid::Uuid::new_v4().to_string();
 
-        // Initial DB insert
+        // Initial DB insert — use the UI-provided title/codec when available
+        // so history rows aren't cluttered with `(url) …` placeholders.
         if let Some(db) = app.try_state::<Database>() {
+            let title = req
+                .title
+                .clone()
+                .filter(|t| !t.is_empty())
+                .unwrap_or_else(|| req.url.clone());
+            let codec = req.codec.clone().unwrap_or_default();
             let _ = db.insert_download(
                 &id,
                 &req.url,
-                &format!("({}) …", &req.url),
-                "",
+                &title,
+                &codec,
                 Utc::now().timestamp_millis(),
             );
         }

@@ -20,6 +20,7 @@
     queueing = true;
     queueError = null;
     try {
+      const codec = metadata.selectedFormat?.label ?? '';
       await downloads.enqueue(
         {
           url: meta.url,
@@ -27,10 +28,12 @@
           presetId: presets.selected?.id ?? '',
           outputDir: runtime.info?.outputDir ?? '~/dl/yt',
           flags: presets.selected?.flags ?? [],
-          subtitleOpts: metadata.subtitleOpts
+          subtitleOpts: metadata.subtitleOpts,
+          title: meta.title,
+          codec
         },
         meta.title,
-        metadata.selectedFormat?.label ?? ''
+        codec
       );
       url = '';
       metadata.clear();

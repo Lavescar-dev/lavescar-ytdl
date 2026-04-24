@@ -57,6 +57,7 @@
     queueError = null;
     try {
       const entries = pl.entries.filter((e) => selected.has(e.id));
+      const codec = metadata.selectedFormat?.label ?? '';
       for (const e of entries) {
         await downloads.enqueue(
           {
@@ -64,10 +65,12 @@
             formatSpec: metadata.selectedFormat?.spec ?? '',
             presetId: presets.selected?.id ?? '',
             outputDir: runtime.info?.outputDir ?? '~/dl/yt',
-            flags: presets.selected?.flags ?? []
+            flags: presets.selected?.flags ?? [],
+            title: e.title,
+            codec
           },
           e.title,
-          metadata.selectedFormat?.label ?? ''
+          codec
         );
       }
       metadata.clear();
