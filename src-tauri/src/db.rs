@@ -26,6 +26,9 @@ pub struct PresetRow {
     pub flags: Vec<String>,
     pub hotkey: Option<String>,
     pub is_default: bool,
+    /// "video" or "audio". Defaults to "video" when missing so older DB
+    /// rows keep working through the pragma-based migration in `migrate`.
+    pub category: String,
 }
 
 pub struct Database {
@@ -43,9 +46,23 @@ impl Database {
     }
 
     fn migrate(&self) -> rusqlite::Result<()> {
-        let sql = include_str!("../migrations/001_init.sql");
         let conn = self.conn.lock().unwrap();
-        conn.execute_batch(sql)?;
+        conn.execute_batch(include_str!("../migrations/001_init.sql"))?;
+
+        // Additive: `category` column on `presets` (SQLite has no ADD COLUMN IF NOT EXISTS).
+        let has_category: i64 = conn.query_row(
+            "SELECT COUNT(*) FROM pragma_table_info('presets') WHERE name = 'category'",
+            [],
+            |r| r.get(0),
+        )?;
+        if has_category == 0 {
+            conn.execute(
+                "ALTER TABLE presets ADD COLUMN category TEXT NOT NULL DEFAULT 'video'",
+                [],
+            )?;
+        }
+
+        conn.execute_batch(include_str!("../migrations/002_presets_v2.sql"))?;
         Ok(())
     }
 
@@ -145,7 +162,9 @@ impl Database {
     pub fn list_presets(&self) -> rusqlite::Result<Vec<PresetRow>> {
         let conn = self.conn.lock().unwrap();
         let mut stmt = conn.prepare(
-            "SELECT id, name, format_spec, flags, hotkey, is_default FROM presets ORDER BY is_default DESC, name ASC",
+            "SELECT id, name, format_spec, flags, hotkey, is_default, category
+             FROM presets
+             ORDER BY category ASC, is_default DESC, name ASC",
         )?;
         let rows = stmt.query_map([], |r| {
             let flags_json: String = r.get(3)?;
@@ -157,6 +176,7 @@ impl Database {
                 flags,
                 hotkey: r.get(4)?,
                 is_default: r.get::<_, i64>(5)? != 0,
+                category: r.get::<_, Option<String>>(6)?.unwrap_or_else(|| "video".into()),
             })
         })?;
         rows.collect()
@@ -165,22 +185,29 @@ impl Database {
     pub fn upsert_preset(&self, p: &PresetRow) -> rusqlite::Result<()> {
         let conn = self.conn.lock().unwrap();
         let flags_json = serde_json::to_string(&p.flags).unwrap_or_else(|_| "[]".into());
+        let category = if p.category.is_empty() {
+            "video".to_string()
+        } else {
+            p.category.clone()
+        };
         conn.execute(
-            "INSERT INTO presets (id, name, format_spec, flags, hotkey, is_default)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6)
+            "INSERT INTO presets (id, name, format_spec, flags, hotkey, is_default, category)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)
              ON CONFLICT(id) DO UPDATE SET
                 name=excluded.name,
                 format_spec=excluded.format_spec,
                 flags=excluded.flags,
                 hotkey=excluded.hotkey,
-                is_default=excluded.is_default",
+                is_default=excluded.is_default,
+                category=excluded.category",
             params![
                 p.id,
                 p.name,
                 p.spec,
                 flags_json,
                 p.hotkey,
-                p.is_default as i64
+                p.is_default as i64,
+                category
             ],
         )?;
         Ok(())
@@ -225,12 +252,16 @@ mod tests {
     fn migration_seeds_default_presets() {
         let db = fresh();
         let presets = db.list_presets().unwrap();
+        // Category-tagged defaults exist
         assert!(presets
             .iter()
-            .any(|p| p.id == "archive-av1" && p.is_default));
+            .any(|p| p.id == "video-archive-av1" && p.is_default && p.category == "video"));
         assert!(presets
             .iter()
-            .any(|p| p.hotkey.as_deref() == Some("\u{2318}1")));
+            .any(|p| p.id == "audio-opus" && p.is_default && p.category == "audio"));
+        // Video tab has at least 5 presets, audio at least 5
+        assert!(presets.iter().filter(|p| p.category == "video").count() >= 5);
+        assert!(presets.iter().filter(|p| p.category == "audio").count() >= 5);
     }
 
     #[test]
@@ -275,6 +306,7 @@ mod tests {
             flags: vec!["--embed-metadata".into()],
             hotkey: None,
             is_default: false,
+            category: "audio".into(),
         };
         db.upsert_preset(&p).unwrap();
         assert!(db.list_presets().unwrap().iter().any(|x| x.id == "custom"));
@@ -292,12 +324,14 @@ mod tests {
             flags: vec!["--a".into(), "--b".into(), "val".into()],
             hotkey: Some("\u{2318}9".into()),
             is_default: false,
+            category: "video".into(),
         };
         db.upsert_preset(&p).unwrap();
         let got = db.list_presets().unwrap();
         let fetched = got.iter().find(|x| x.id == "flg").unwrap();
         assert_eq!(fetched.flags, p.flags);
         assert_eq!(fetched.hotkey, p.hotkey);
+        assert_eq!(fetched.category, "video");
     }
 
     #[test]

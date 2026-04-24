@@ -1,16 +1,38 @@
 <script lang="ts">
   import { presets } from '$lib/state/presets.svelte';
+  import { ui } from '$lib/state/ui.svelte';
 </script>
 
 <div class="panel">
   <div class="panel-h">
     <span class="dot"></span>
     <span class="title-text">preset</span>
-    <span class="meta">⌘P to switch</span>
+    <span class="meta">⌘1-3 within tab</span>
+  </div>
+
+  <div class="tabs" role="tablist" aria-label="Preset category">
+    <button
+      class="tab"
+      class:on={presets.activeCategory === 'video'}
+      role="tab"
+      aria-selected={presets.activeCategory === 'video'}
+      onclick={() => presets.setCategory('video')}
+    >
+      video
+    </button>
+    <button
+      class="tab"
+      class:on={presets.activeCategory === 'audio'}
+      role="tab"
+      aria-selected={presets.activeCategory === 'audio'}
+      onclick={() => presets.setCategory('audio')}
+    >
+      audio
+    </button>
   </div>
 
   <div class="preset-list">
-    {#each presets.items as p}
+    {#each presets.visible as p (p.id)}
       {@const on = p.id === presets.selectedId}
       <div
         class="preset-row"
@@ -18,19 +40,29 @@
         onclick={() => presets.select(p.id)}
         role="button"
         tabindex="0"
-        onkeydown={(e) => e.key === 'Enter' && presets.select(p.id)}
+        onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && presets.select(p.id)}
       >
         <span class="pmark">{on ? '▸' : '·'}</span>
-        <div>
+        <div class="info">
           <div class="preset-name">{p.name}</div>
           <div class="preset-spec">{p.spec}</div>
+          {#if p.flags && p.flags.length > 0}
+            <div class="preset-flags">{p.flags.join(' ')}</div>
+          {/if}
         </div>
         <span class="preset-meta">
           {p.isDefault ? 'default' : (p.hotkey ?? '')}
         </span>
       </div>
     {/each}
-    <div class="preset-add" role="button" tabindex="0">+ new preset</div>
+
+    {#if presets.visible.length === 0}
+      <div class="empty">no presets in this category yet.</div>
+    {/if}
+
+    <button class="preset-add" onclick={() => ui.setView('presets')}>
+      + manage presets
+    </button>
   </div>
 </div>
 
@@ -79,11 +111,37 @@
     font-size: 11px;
   }
 
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid var(--line);
+    background: var(--bg-soft);
+  }
+  .tab {
+    flex: 1;
+    padding: 8px 14px;
+    background: transparent;
+    border: 0;
+    color: var(--dim);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    cursor: pointer;
+    transition: all 0.12s ease;
+    border-bottom: 2px solid transparent;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.on {
+    color: var(--amber);
+    border-bottom-color: var(--amber);
+    background: var(--surface);
+  }
+  .tab + .tab { border-left: 1px solid var(--line); }
+
   .preset-list { padding: 6px 0; }
 
   .preset-row {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 10px;
     padding: 9px 18px;
     cursor: pointer;
@@ -99,9 +157,11 @@
     color: var(--dim);
     font-family: var(--mono);
     width: 12px;
+    padding-top: 1px;
   }
   .preset-row.on .pmark { color: var(--amber); }
 
+  .info { flex: 1; min-width: 0; }
   .preset-name {
     color: var(--text-hi);
     font-size: 12px;
@@ -112,22 +172,47 @@
     font-size: 10.5px;
     margin-top: 1px;
     font-family: var(--mono);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .preset-flags {
+    color: var(--olive);
+    font-size: 10px;
+    margin-top: 2px;
+    font-family: var(--mono);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .preset-meta {
-    margin-left: auto;
     color: var(--dim);
     font-size: 10px;
+    padding-top: 1px;
+    white-space: nowrap;
+  }
+
+  .empty {
+    padding: 24px 18px;
+    color: var(--dim);
+    font-size: 11px;
+    text-align: center;
+    font-style: italic;
   }
 
   .preset-add {
+    width: 100%;
     padding: 9px 18px;
     color: var(--amber);
     font-size: 11px;
+    background: transparent;
+    border: 0;
     border-top: 1px dashed var(--line);
     display: flex;
     align-items: center;
     gap: 8px;
     cursor: pointer;
+    text-align: left;
   }
   .preset-add:hover { background: var(--surface-2); }
 </style>

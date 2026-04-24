@@ -37,6 +37,8 @@ export interface FormatOption {
   spec: string;           // yt-dlp -f spec
 }
 
+export type PresetCategory = 'video' | 'audio';
+
 export interface Preset {
   id: string;
   name: string;
@@ -44,6 +46,7 @@ export interface Preset {
   flags?: string[];       // extra flags: --split-chapters, --embed-metadata, etc.
   hotkey?: string;        // "⌘1"
   isDefault?: boolean;
+  category: PresetCategory;
 }
 
 export interface Download {

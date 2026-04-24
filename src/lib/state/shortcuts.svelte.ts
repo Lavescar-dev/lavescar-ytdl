@@ -34,9 +34,11 @@ export function startShortcuts() {
     el?.select();
   });
 
-  registerShortcut('mod+1', 'select preset #1', () => selectHotkeyPreset('⌘1'));
-  registerShortcut('mod+2', 'select preset #2', () => selectHotkeyPreset('⌘2'));
-  registerShortcut('mod+3', 'select preset #3', () => selectHotkeyPreset('⌘3'));
+  registerShortcut('mod+1', 'active category preset #1', () => selectCategoryPreset(0));
+  registerShortcut('mod+2', 'active category preset #2', () => selectCategoryPreset(1));
+  registerShortcut('mod+3', 'active category preset #3', () => selectCategoryPreset(2));
+  registerShortcut('mod+shift+v', 'switch to video preset tab', () => presets.setCategory('video'));
+  registerShortcut('mod+shift+a', 'switch to audio preset tab', () => presets.setCategory('audio'));
 
   registerShortcut('mod+,', 'open settings', () => ui.openSettings());
   registerShortcut('?', 'show shortcuts cheatsheet', () => toggleCheatsheet(true));
@@ -60,9 +62,14 @@ export function startShortcuts() {
   });
 }
 
-function selectHotkeyPreset(hotkey: string) {
-  const p = presets.items.find((x) => x.hotkey === hotkey);
-  if (p) presets.select(p.id);
+function selectCategoryPreset(index: number) {
+  const list = presets.items.filter((p) => p.category === presets.activeCategory);
+  // Prefer rows carrying an explicit `⌘N` hotkey (user-chosen order), else fall
+  // back to list position — works both for legacy DBs and freshly seeded ones.
+  const wanted = `⌘${index + 1}`;
+  const byHotkey = list.find((p) => p.hotkey === wanted);
+  const target = byHotkey ?? list[index];
+  if (target) presets.select(target.id);
 }
 
 function toggleCheatsheet(on: boolean) {
