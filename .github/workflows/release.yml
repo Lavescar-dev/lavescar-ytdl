@@ -6,6 +6,9 @@ on:
       - 'v*'
   workflow_dispatch:
 
+# Paths are root-relative so the same yaml powers both the monorepo
+# subtree and the standalone Lavescar-dev/lavescar-ytdl repo.
+
 jobs:
   build:
     strategy:
@@ -16,17 +19,14 @@ jobs:
             target: x86_64-unknown-linux-gnu
             ytdlp_asset: yt-dlp_linux
             ytdlp_name: yt-dlp-x86_64-unknown-linux-gnu
-            ffmpeg_skip: true
           - platform: windows-latest
             target: x86_64-pc-windows-msvc
             ytdlp_asset: yt-dlp.exe
             ytdlp_name: yt-dlp-x86_64-pc-windows-msvc.exe
-            ffmpeg_skip: false
           - platform: macos-latest
             target: aarch64-apple-darwin
             ytdlp_asset: yt-dlp_macos
             ytdlp_name: yt-dlp-aarch64-apple-darwin
-            ffmpeg_skip: false
 
     runs-on: ${{ matrix.platform }}
 
@@ -38,7 +38,7 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
-          cache-dependency-path: demos/yt-extractor/lavescar-ytdl/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -48,7 +48,7 @@ jobs:
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: demos/yt-extractor/lavescar-ytdl/src-tauri
+          workspaces: src-tauri
 
       - name: Linux system deps
         if: matrix.platform == 'ubuntu-latest'
@@ -58,7 +58,7 @@ jobs:
 
       - name: Download yt-dlp sidecar binary
         shell: bash
-        working-directory: demos/yt-extractor/lavescar-ytdl/src-tauri/binaries
+        working-directory: src-tauri/binaries
         run: |
           curl -L -o "${{ matrix.ytdlp_name }}" "https://github.com/yt-dlp/yt-dlp/releases/latest/download/${{ matrix.ytdlp_asset }}"
           if [ "${{ matrix.platform }}" != "windows-latest" ]; then
@@ -66,11 +66,9 @@ jobs:
           fi
 
       - name: Install frontend deps
-        working-directory: demos/yt-extractor/lavescar-ytdl
         run: npm ci
 
       - name: Build Tauri bundle
-        working-directory: demos/yt-extractor/lavescar-ytdl
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
@@ -81,7 +79,7 @@ jobs:
         with:
           name: lavescar-ytdl-${{ matrix.target }}
           path: |
-            demos/yt-extractor/lavescar-ytdl/src-tauri/target/${{ matrix.target }}/release/bundle/**/*
+            src-tauri/target/${{ matrix.target }}/release/bundle/**/*
           if-no-files-found: warn
 
   release:
