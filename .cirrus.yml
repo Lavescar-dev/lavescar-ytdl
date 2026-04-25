@@ -1,0 +1,164 @@
+# Cirrus CI — multi-platform Tauri build for lavescar-ytdl.
+#
+# We use Cirrus instead of GitHub Actions because the upstream account
+# (`Lavescar-dev`) is locked due to a payment authorization issue, which
+# halts even free-tier Action runs. Cirrus is an independent CI provider
+# with a generous free tier for public repos and supports native macOS
+# and Windows runners (we need both — Tauri can't cross-compile to them
+# from Linux reliably).
+#
+# What runs: on every tag matching `v*`, build Linux/Windows/macOS Tauri
+# bundles in parallel and append them to the matching GitHub Release.
+#
+# Required Cirrus repository secrets (set in the Cirrus dashboard):
+#   - GH_TOKEN                              — PAT with `repo` scope
+#   - TAURI_SIGNING_PRIVATE_KEY             — minisign private key contents
+#   - TAURI_SIGNING_PRIVATE_KEY_PASSWORD    — empty string for our keypair
+#
+# Release flow: an outer `npm run tauri:build` is fine to run locally for
+# Linux; this CI handles the platforms you don't have a machine for.
+
+# Run only on version tag pushes.
+only_if: $CIRRUS_TAG =~ '^v.*'
+
+# Common script blocks reused across tasks.
+shared_env: &shared_env
+  CARGO_TERM_COLOR: always
+  TAURI_SIGNING_PRIVATE_KEY: $TAURI_SIGNING_PRIVATE_KEY
+  TAURI_SIGNING_PRIVATE_KEY_PASSWORD: $TAURI_SIGNING_PRIVATE_KEY_PASSWORD
+
+# ─────────────────────────────────────────────────────────────────────
+# Linux x86_64 — AppImage + .deb
+# ─────────────────────────────────────────────────────────────────────
+linux_task:
+  name: build · linux x86_64
+  alias: build-linux
+  env:
+    <<: *shared_env
+  container:
+    image: rust:1-bookworm
+    cpu: 4
+    memory: 8G
+
+  install_system_deps_script: |
+    apt-get update
+    apt-get install -y --no-install-recommends \
+      libwebkit2gtk-4.1-dev build-essential curl wget file \
+      libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev \
+      ca-certificates gnupg
+    # Node 20 from NodeSource so tauri-cli matches the Linux runner.
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+    apt-get install -y nodejs
+
+  fetch_ytdlp_script: |
+    cd src-tauri/binaries
+    curl -L --retry 3 -o yt-dlp-x86_64-unknown-linux-gnu \
+      https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux
+    chmod +x yt-dlp-x86_64-unknown-linux-gnu
+
+  npm_ci_script:    npm ci
+  cargo_cache:
+    folder: $HOME/.cargo
+    fingerprint_script: cat src-tauri/Cargo.lock 2>/dev/null || echo none
+  target_cache:
+    folder: src-tauri/target
+    fingerprint_script: cat src-tauri/Cargo.lock 2>/dev/null || echo none
+
+  build_script: |
+    npm run tauri:build -- --target x86_64-unknown-linux-gnu
+
+  upload_artifacts_script: |
+    set -e
+    apt-get install -y gh
+    BUNDLE=src-tauri/target/x86_64-unknown-linux-gnu/release/bundle
+    for f in $BUNDLE/appimage/*.AppImage* $BUNDLE/deb/*.deb; do
+      [ -f "$f" ] || continue
+      echo "uploading $f"
+      gh release upload "$CIRRUS_TAG" "$f" \
+        --repo Lavescar-dev/lavescar-ytdl --clobber || true
+    done
+  env_GH_TOKEN: $GH_TOKEN
+
+# ─────────────────────────────────────────────────────────────────────
+# Windows x86_64 — MSI + NSIS .exe
+# ─────────────────────────────────────────────────────────────────────
+windows_task:
+  name: build · windows x86_64
+  alias: build-windows
+  env:
+    <<: *shared_env
+  windows_container:
+    image: cirrusci/windowsservercore:visualstudio2022
+    cpu: 4
+    memory: 8G
+    os_version: 2022
+
+  install_rust_script: |
+    curl -sSf -o rustup-init.exe https://win.rustup.rs/x86_64
+    rustup-init.exe -y --default-toolchain stable --target x86_64-pc-windows-msvc
+    echo "PATH=%USERPROFILE%\\.cargo\\bin;%PATH%" >> %CIRRUS_ENV%
+  install_node_script: |
+    choco install nodejs-lts -y --version 20.18.0 --no-progress
+    refreshenv
+
+  fetch_ytdlp_script: |
+    cd src-tauri\binaries
+    curl -L --retry 3 -o yt-dlp-x86_64-pc-windows-msvc.exe ^
+      https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe
+
+  npm_ci_script: npm ci
+  build_script: |
+    npm run tauri:build -- --target x86_64-pc-windows-msvc
+
+  upload_artifacts_script: |
+    choco install gh -y --no-progress
+    cd src-tauri\target\x86_64-pc-windows-msvc\release\bundle
+    for /R %%f in (*.msi *.msi.zip *.msi.zip.sig *.exe *.exe.sig) do (
+      echo uploading %%f
+      gh release upload %CIRRUS_TAG% "%%f" --repo Lavescar-dev/lavescar-ytdl --clobber
+    )
+  env_GH_TOKEN: $GH_TOKEN
+
+# ─────────────────────────────────────────────────────────────────────
+# macOS aarch64 (Apple Silicon) — .dmg + .app.tar.gz (updater bundle)
+# ─────────────────────────────────────────────────────────────────────
+macos_task:
+  name: build · macos aarch64
+  alias: build-macos
+  env:
+    <<: *shared_env
+  macos_instance:
+    image: ghcr.io/cirruslabs/macos-runner:sequoia
+
+  install_rust_script: |
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+    source "$HOME/.cargo/env"
+    rustup target add aarch64-apple-darwin
+  install_node_script: |
+    brew install node@20
+    echo 'export PATH="/opt/homebrew/opt/node@20/bin:$PATH"' >> $HOME/.zshrc
+
+  fetch_ytdlp_script: |
+    cd src-tauri/binaries
+    curl -L --retry 3 -o yt-dlp-aarch64-apple-darwin \
+      https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos
+    chmod +x yt-dlp-aarch64-apple-darwin
+
+  npm_ci_script: |
+    source "$HOME/.cargo/env"
+    npm ci
+
+  build_script: |
+    source "$HOME/.cargo/env"
+    npm run tauri:build -- --target aarch64-apple-darwin
+
+  upload_artifacts_script: |
+    brew install gh
+    BUNDLE=src-tauri/target/aarch64-apple-darwin/release/bundle
+    for f in $BUNDLE/dmg/*.dmg $BUNDLE/macos/*.app.tar.gz $BUNDLE/macos/*.app.tar.gz.sig; do
+      [ -f "$f" ] || continue
+      echo "uploading $f"
+      gh release upload "$CIRRUS_TAG" "$f" \
+        --repo Lavescar-dev/lavescar-ytdl --clobber || true
+    done
+  env_GH_TOKEN: $GH_TOKEN
